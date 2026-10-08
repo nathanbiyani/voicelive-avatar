@@ -50,7 +50,6 @@ For the verified development subscription:
 
 ```bash
 az login
-az account set --subscription cdcfc2b6-afa4-4076-abe1-ac97a899a308
 ```
 
 The backend uses `DefaultAzureCredential`. In an Azure deployment, use a managed identity
