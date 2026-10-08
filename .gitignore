@@ -451,5 +451,11 @@ application.properties
 
 # JavaScript/TypeScript files
 package-lock.json
+!frontend/package-lock.json
 node_modules/
 *.tsbuildinfo
+frontend/dist/
+frontend/coverage/
+frontend/playwright-report/
+frontend/test-results/
+backend/.pytest_cache/

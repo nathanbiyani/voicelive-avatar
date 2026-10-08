@@ -2,6 +2,213 @@
 
 This repository contains sample code and resources for working with Azure AI Speech Service Voice Live.
 
+## AutoXRay Voice Live avatar evaluation application
+
+AutoXRay is a conversation-first React and FastAPI demo for evaluating an Azure Voice Live
+avatar in patient-facing medical-imaging scenarios. It was built against the public
+[AutoXRay evaluation workbook](./Public%20Version%20of%20AutoXRay_Avatar_Vendor_Evaluation_Microsoft_Response.xlsx).
+The application keeps the complete 47-row mapping in code, while the interface stays focused
+on talking to the avatar and changing session behavior.
+
+### What is included
+
+```text
+backend/    FastAPI API, Voice Live session adapter, validated catalogs, and safe telemetry
+frontend/   React/TypeScript conversation UI, browser microphone, avatar video, and audio decode
+python/     Upstream Python samples retained as reference
+```
+
+Key capabilities:
+
+- Live browser microphone capture with Azure semantic or server voice activity detection.
+- Streaming video avatar with captions and proactive greeting.
+- WebSocket fragmented-MP4 playback with H.264 video demuxing and WASM AAC speech decoding.
+- Standard, custom, personal, and realtime-native voice configuration surfaces.
+- Medical terminology instruction packs for radiography, CT, MRI, and ultrasound.
+- Synthetic complex-name phrase hints, locale profiles, optional Custom Speech mappings,
+  and an HTTPS pronunciation lexicon.
+- Noise suppression, echo cancellation, voice speed, prompt, avatar, and scene controls.
+- Privacy-safe Application Insights hooks that exclude audio, video, transcripts, names,
+  prompts, credentials, endpoints, SDP, and raw service errors.
+
+### Prerequisites
+
+- Python 3.12
+- Node.js 18 or later and npm
+- Azure CLI
+- An Azure AI Services or Microsoft Foundry resource with Voice Live enabled
+- A deployed realtime model such as `gpt-realtime`
+- An identity with permission to use the model, such as **Cognitive Services OpenAI User**
+- A Chromium-based browser with microphone and sound permissions
+
+The verified development resource uses Microsoft Entra authentication because local-key
+authentication is disabled. Do not add Azure credentials to the frontend.
+
+### Azure authentication
+
+For the verified development subscription:
+
+```bash
+az login
+az account set --subscription cdcfc2b6-afa4-4076-abe1-ac97a899a308
+```
+
+The backend uses `DefaultAzureCredential`. In an Azure deployment, use a managed identity
+with the minimum required role on the Voice Live resource.
+
+### Configure the backend
+
+```bash
+cd backend
+python -m venv .venv
+.venv/bin/pip install -r requirements.txt
+cp .env.example .env
+```
+
+Set at least:
+
+```dotenv
+AZURE_VOICELIVE_ENDPOINT=https://<resource>.services.ai.azure.com
+AZURE_VOICELIVE_API_KEY=
+VOICELIVE_MODEL=gpt-realtime
+VOICELIVE_VOICE=en-US-AvaMultilingualNeural
+ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+```
+
+Leave `AZURE_VOICELIVE_API_KEY` empty to use Entra ID. `.env` files are ignored by Git.
+See [backend/.env.example](./backend/.env.example) for all settings.
+
+### Install the frontend
+
+```bash
+cd frontend
+npm install
+```
+
+### Run locally
+
+Start the backend:
+
+```bash
+cd backend
+.venv/bin/uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+In another terminal, start the frontend:
+
+```bash
+cd frontend
+npm run dev -- --host 127.0.0.1
+```
+
+Open `http://127.0.0.1:5173`, allow microphone and site audio access, and select
+**Start voice session**. Vite proxies `/api` and `/ws` to FastAPI during development.
+
+The default avatar transport is WebSocket fragmented MP4. WebRTC remains configurable, but
+WebSocket was the reliable media path in the validated development environment.
+
+### Configure an evaluation session
+
+Use **Settings** before connecting to change:
+
+- Presets for clinical clarity, complex names, avatar review, or background noise.
+- Medical terminology pack and recognition locale.
+- Standard, custom, Personal Voice, or realtime-native output.
+- Avatar character/style, transport, and photo-avatar scene controls.
+- Noise suppression, echo cancellation, turn detection, captions, and developer transcript.
+- Model instructions and voice speed.
+
+Voice and avatar configuration is fixed when a session starts. Disconnect before changing
+those settings, then reconnect.
+
+### What has been proved out
+
+The public workbook contains 47 populated criteria:
+
+- 14 can be evaluated in a live demo.
+- 13 require an expanded pilot or deployed infrastructure.
+- 20 require vendor evidence, commercial information, formal compliance review, or
+  unavailable capabilities.
+
+Manual live results recorded during development:
+
+| Workbook row | Criterion | Result | Evidence |
+|---|---|---|---|
+| 6 | Real-time Animation | Pass | Continuous live avatar motion was observed. |
+| 7 | Lip-Sync | Pass | Mouth timing was acceptable on a consonant-heavy calibration sentence. |
+| 8 | Gaze | Pass | Camera-facing gaze was stable during speech and idle time. |
+| 9 | Emotional expressivity | Pass | Prompt tone produced acceptable vocal and visual contrast. |
+| 10 | Empathy & Warm | Pass | Claustrophobia reassurance was warm, safe, and patient-friendly. |
+| 11 | User Experience | Pass | Start, permission, listening, caption, response, mute, and disconnect flow worked. |
+| 14 | ASR & TTS Robustness | Pass | Dates, times, numbers, captions, and synthesized response were acceptable. |
+| 15 | Multi-Languages, Dialects | Pass | Mexican Spanish recognition and response worked with the locale profile. |
+| 16 | Complex Names | Pass | Synthetic names were recognized and spoken back acceptably using phrase hints. |
+| 18 | Medical Terminology Packs | Needs tuning | MRI content was accurate, but first-use expansion and precise “ionizing radiation” wording need stronger enforcement. |
+
+Live-demo criteria still awaiting a formal verdict are Complex Accents (row 17),
+Customizability (row 24), Cloud Latency against the strict 500ms target (row 34), and
+Background Noise (row 35).
+
+Technical runtime evidence:
+
+- Voice Live connected with automatic microphone capture.
+- The avatar streamed and played at 800x1080.
+- Captions and proactive English greeting were received.
+- AAC speech embedded in fragmented MP4 was extracted, decoded, and scheduled through Web Audio.
+- Instrumented validation observed a running `AudioContext` and 203 audio buffer starts.
+
+These are demonstration results, not clinical validation, regulatory approval, accessibility
+certification, or production performance guarantees.
+
+### Complex names and Personal Voice
+
+Complex-name evaluation has two independent directions:
+
+1. Incoming recognition uses a short synthetic phrase list to bias Azure Speech toward
+   expected spellings.
+2. Avatar speak-back evaluates outgoing pronunciation. Standard and custom voices can use an
+   HTTPS pronunciation lexicon.
+
+A consented Personal Voice profile can use `DragonLatestNeural`, the rolling Voice Live model
+name that includes current Dragon improvements. Personal Voice is limited access and requires
+explicit recorded consent, a 5-90 second sample, and a `speakerProfileId` available on the same
+Foundry resource. It personalizes synthesized output; it does not improve incoming ASR.
+
+### Optional infrastructure not yet provisioned
+
+- Dedicated Application Insights and Log Analytics resources for audit export and retention.
+- Service-accessible HTTPS hosting for the sample pronunciation lexicon.
+- Locale-specific Custom Speech model deployments.
+- A consented Personal Voice speaker profile.
+- An application-specific Foundry agent.
+- Production frontend/backend hosting, managed identity, networking, and recovery.
+- Private Blob Storage catalogs for centrally managed terminology and synthetic-name packs.
+
+See [backend/README.md](./backend/README.md#current-azure-resource-status) for the verified
+resource inventory and precise blockers.
+
+### Validation
+
+```bash
+cd backend
+.venv/bin/pytest
+
+cd ../frontend
+npm test
+npm run lint
+npm run build
+npm run test:e2e
+```
+
+Current validated baseline:
+
+- 19 backend tests passed.
+- 10 frontend tests passed.
+- 4 Chromium end-to-end journeys passed.
+- ESLint and the production build passed.
+
+Starting a live Voice Live session can incur Azure usage charges.
+
 ## Overview
 
 Voice Live enables real-time voice interactions using Azure AI Speech Service. These samples demonstrate how to integrate Voice Live into your applications for various scenarios including conversational AI, voice assistants, and interactive voice experiences.

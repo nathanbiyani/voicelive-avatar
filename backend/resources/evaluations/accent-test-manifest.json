@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "privacy": "Use live speakers or recordings with explicit consent. Do not send audio or transcripts to Application Insights.",
+  "prompts": [
+    {
+      "id": "check-in-name",
+      "text": "Hello, my name is Siobhan O'Sullivan and I am here for an X-ray."
+    },
+    {
+      "id": "ct-preparation",
+      "text": "Should I remove my glasses before the computed tomography scan?"
+    },
+    {
+      "id": "mri-screening",
+      "text": "I have a metal implant and need to complete the MRI safety screening."
+    },
+    {
+      "id": "breath-hold",
+      "text": "Please tell me when to hold my breath and when I can breathe normally."
+    }
+  ],
+  "profiles": [
+    "en-US",
+    "en-GB",
+    "en-IN",
+    "es-ES",
+    "es-MX"
+  ]
+}
