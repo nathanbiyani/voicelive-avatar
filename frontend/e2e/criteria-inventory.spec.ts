@@ -7,4 +7,10 @@ test('keeps the workbook matrix hidden and centers the live conversation', async
   await expect(page.getByRole('heading', { name: 'All 47 evaluation criteria' })).toHaveCount(0)
   await expect(page.locator('.criteria-table')).toHaveCount(0)
   await expect(page.locator('.stage')).toHaveCSS('height', '600px')
+  await page.locator('.avatar-stage').evaluate((container) => {
+    const video = document.createElement('video')
+    video.className = 'avatar-media'
+    container.append(video)
+  })
+  await expect(page.locator('.avatar-media')).toHaveCSS('object-fit', 'contain')
 })
